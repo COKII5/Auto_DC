@@ -4,8 +4,9 @@ Carro con tracción por motorreductores DC, dirección por servo, modo manual de
 
 ## Estado actual
 
-**Última sesión (2026-10-02):** se definieron la arquitectura y la checklist de materiales, y se creó la estructura de carpetas en el repo `Auto_DC`. Aún no hay código del carro.
+**Última sesión (2026-10-02):** se definieron la arquitectura y la checklist de materiales, y se creó la estructura de carpetas en el repo `Auto_DC`. Todo se subió a la rama `desarrollo`; `master` no se toca. Aún no hay código del carro.
 **Próximos pasos:**
+- Borrar la carpeta vacía `Documents\Arduino\prueba_brushless_a2212`. Crear el proyecto Unity en `unity/CarroDC` desde Unity Hub.
 - Confirmar: voltaje de los N20 y si traen encoder, modelo del servo, mando y cargador.
 - Confirmar la consigna: qué debe hacer el modo autónomo y que no exija el brushless.
 - Conseguir el chasis y los materiales 🛒 de la checklist.

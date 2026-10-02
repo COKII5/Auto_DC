@@ -26,4 +26,4 @@ No hagas cambios hasta que el usuario lo pida.
 - Cada `.ino` va en una carpeta con su mismo nombre (lo exige el Arduino IDE).
 - El firmware principal va en `firmware/carro_dc/`. Las pruebas sueltas van en `pruebas/<nombre>/<nombre>.ino`.
 - El proyecto de Unity 6 va en `unity/CarroDC/`.
-- Es un repo git (`github.com/COKII5/Auto_DC`). No hagas commit ni push sin que el usuario lo pida.
+- Es un repo git (`github.com/COKII5/Auto_DC`). Se trabaja en la rama `desarrollo`; no fusiones con `master` ni hagas commit o push sin que el usuario lo pida.
