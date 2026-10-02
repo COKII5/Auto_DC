@@ -1,0 +1,64 @@
+# Proyecto Unity 6 (basado en github.com/github/gitignore/blob/main/Unity.gitignore)
+
+# Carpetas que Unity regenera
+.utmp/
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+*.log
+
+# IDE (Visual Studio, Rider, Consulo)
+.vs/
+.idea/
+.consulo/
+ExportedObj/
+/[Aa]ssets/Plugins/Editor/JetBrains*
+*.DotSettings.user
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Archivos generados por Unity y Mono
+sysinfo.txt
+mono_crash.*
+crashlytics-build.properties
+*.blend1
+*.blend1.meta
+
+# Builds y paquetes exportados
+*.apk
+*.aab
+*.app
+*.unitypackage
+*.unitypackage.meta
+
+# Escenas temporales del Test Runner
+InitTestScene*.unity*
+/[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Archivos autogenerados de Visual Scripting
+/[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Flow/UnitOptions.bytes
+/[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Flow/UnitOptions.bytes.meta
+/[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers
+/[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers.meta

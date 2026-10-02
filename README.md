@@ -4,9 +4,9 @@ Carro con tracción por motorreductores DC, dirección por servo, modo manual de
 
 ## Estado actual
 
-**Última sesión (2026-10-02):** se definieron la arquitectura y la checklist de materiales, y se creó la estructura de carpetas en el repo `Auto_DC`. Todo se subió a la rama `desarrollo`; `master` no se toca. Aún no hay código del carro.
+**Última sesión (2026-10-02):** se creó el proyecto Unity en `unity/CarroDC` (6000.0.82f1, 3D URP + Input System), se quitó el tutorial de la plantilla y se subió a `desarrollo`. Aún no hay código del carro.
 **Próximos pasos:**
-- Borrar la carpeta vacía `Documents\Arduino\prueba_brushless_a2212`. Crear el proyecto Unity en `unity/CarroDC` desde Unity Hub.
+- Añadir el proyecto a Unity Hub (*Add → Add project from disk* → `unity/CarroDC`). Definir el formato de mensajes UDP en `docs/`.
 - Confirmar: voltaje de los N20 y si traen encoder, modelo del servo, mando y cargador.
 - Confirmar la consigna: qué debe hacer el modo autónomo y que no exija el brushless.
 - Conseguir el chasis y los materiales 🛒 de la checklist.
@@ -38,6 +38,11 @@ Carro con tracción por motorreductores DC, dirección por servo, modo manual de
 - La ESP32 envía los datos de los sensores y el estado del modo autónomo, **20–50 veces por segundo**.
 - Unity envía las órdenes de conducción y de cambio de modo.
 - Se usa una red Wi-Fi de **2,4 GHz**.
+
+### Proyecto Unity
+- **Unity 6000.0.82f1** (Unity 6 LTS) con la plantilla **3D URP**.
+- Solo el **Input System** nuevo como sistema de entrada. Las acciones del proyecto están en `Assets/InputSystem_Actions.inputactions`.
+- El proyecto tiene su propio `.gitignore` en `unity/CarroDC/`. `Library/`, `Logs/`, `UserSettings/` y los archivos del IDE no se suben.
 
 ### Sensores
 - **3 sensores ToF VL53L0X** (frente, izquierda y derecha) para detectar obstáculos.
@@ -97,7 +102,7 @@ Leyenda: ✅ ya lo tengo · ❓ falta confirmar · 🛒 hay que conseguirlo · �
 Auto_DC/
 ├── firmware/carro_dc/   Sketch principal de la ESP32
 ├── pruebas/             Un sketch por prueba: pruebas/<nombre>/<nombre>.ino
-├── unity/               Proyecto Unity 6 (unity/CarroDC, se crea con Unity Hub)
+├── unity/CarroDC/       Proyecto Unity 6 (Assets, Packages, ProjectSettings)
 ├── docs/                Consigna, datasheets, fotos y formato de mensajes UDP
 └── hardware/            Esquema de conexiones y archivos del chasis (STL/CAD)
 ```
@@ -108,5 +113,6 @@ Auto_DC/
 |---|---|---|
 | `pruebas/prueba_brushless_a2212/prueba_brushless_a2212.ino` | Archivado | Prueba inicial del A2212 con ESC: arma, rampa de 1,5 s, gira 5 s y para. No forma parte del carro final |
 | `pruebas/prueba_motores_l298n/prueba_motores_l298n.ino` | Archivado | Prueba inicial para Arduino Uno: dos motores DC con L298N (IN1–IN4 = 11, 10, 6, 5), adelante 2 s, para y atrás. Sin PWM |
+| `unity/CarroDC/` | Creado | Proyecto vacío de la plantilla 3D URP: escena `Assets/Scenes/SampleScene.unity`, ajustes URP en `Assets/Settings/` y acciones por defecto del Input System. Sin scripts propios |
 
 *Sketch principal del carro: aún no creado.*

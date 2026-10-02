@@ -1,14 +1,8 @@
-# Unity (proyecto en unity/CarroDC)
-unity/*/[Ll]ibrary/
-unity/*/[Tt]emp/
-unity/*/[Oo]bj/
-unity/*/[Bb]uild/
-unity/*/[Bb]uilds/
-unity/*/[Ll]ogs/
-unity/*/[Uu]ser[Ss]ettings/
-unity/*/.vs/
-unity/*/*.csproj
-unity/*/*.sln
+# Las reglas de Unity están en unity/CarroDC/.gitignore
 
 # Editores
 .vscode/
+
+# Sistema
+Thumbs.db
+desktop.ini
