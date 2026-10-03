@@ -4,9 +4,9 @@ Carro con tracción por motorreductores DC, dirección por servo, modo manual de
 
 ## Estado actual
 
-**Última sesión (2026-10-02):** se creó el proyecto Unity en `unity/CarroDC` (6000.0.82f1, 3D URP + Input System), se quitó el tutorial de la plantilla y se subió a `desarrollo`. Aún no hay código del carro.
+**Última sesión (2026-10-03):** se creó el proyecto Unity en `unity/CarroDC` (6000.0.82f1, 3D URP + Input System), sin el tutorial de la plantilla ni Unity Version Control. Está subido a `desarrollo`. Aún no hay código del carro.
 **Próximos pasos:**
-- Añadir el proyecto a Unity Hub (*Add → Add project from disk* → `unity/CarroDC`). Definir el formato de mensajes UDP en `docs/`.
+- En Unity Hub, quitar la entrada `Auto_DC` y añadir `unity/CarroDC`. Definir el formato de mensajes UDP en `docs/`.
 - Confirmar: voltaje de los N20 y si traen encoder, modelo del servo, mando y cargador.
 - Confirmar la consigna: qué debe hacer el modo autónomo y que no exija el brushless.
 - Conseguir el chasis y los materiales 🛒 de la checklist.
@@ -43,6 +43,8 @@ Carro con tracción por motorreductores DC, dirección por servo, modo manual de
 - **Unity 6000.0.82f1** (Unity 6 LTS) con la plantilla **3D URP**.
 - Solo el **Input System** nuevo como sistema de entrada. Las acciones del proyecto están en `Assets/InputSystem_Actions.inputactions`.
 - El proyecto tiene su propio `.gitignore` en `unity/CarroDC/`. `Library/`, `Logs/`, `UserSettings/` y los archivos del IDE no se suben.
+- El control de versiones es **solo git**. Se quitó el paquete Unity Version Control (`com.unity.collab-proxy`) y el modo queda en **Visible Meta Files**.
+- En Unity Hub se añade la carpeta `unity/CarroDC`, no la raíz del repo.
 
 ### Sensores
 - **3 sensores ToF VL53L0X** (frente, izquierda y derecha) para detectar obstáculos.
@@ -113,6 +115,6 @@ Auto_DC/
 |---|---|---|
 | `pruebas/prueba_brushless_a2212/prueba_brushless_a2212.ino` | Archivado | Prueba inicial del A2212 con ESC: arma, rampa de 1,5 s, gira 5 s y para. No forma parte del carro final |
 | `pruebas/prueba_motores_l298n/prueba_motores_l298n.ino` | Archivado | Prueba inicial para Arduino Uno: dos motores DC con L298N (IN1–IN4 = 11, 10, 6, 5), adelante 2 s, para y atrás. Sin PWM |
-| `unity/CarroDC/` | Creado | Proyecto vacío de la plantilla 3D URP: escena `Assets/Scenes/SampleScene.unity`, ajustes URP en `Assets/Settings/` y acciones por defecto del Input System. Sin scripts propios |
+| `unity/CarroDC/` | Creado | Proyecto vacío de la plantilla 3D URP: escena `Assets/Scenes/SampleScene.unity`, ajustes URP en `Assets/Settings/` y acciones por defecto del Input System. Sin Unity Version Control. Sin scripts propios |
 
 *Sketch principal del carro: aún no creado.*
