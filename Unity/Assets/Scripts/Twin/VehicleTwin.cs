@@ -17,7 +17,7 @@ namespace AutoDc.Twin
         [SerializeField] private float _wheelRadiusMeters = 0.024f;
 
         [Header("Respuesta")]
-        [Tooltip("Velocidad lineal sin carga a 6 V del informe, Ec. (19).")]
+        [Tooltip("Velocidad lineal sin carga a 6 V del informe, Ec. (21).")]
         [SerializeField] private float _maxSpeedMetersPerSecond = 1.257f;
         [SerializeField] private float _motorTimeConstantSeconds = 0.15f;
         [SerializeField] private float _brakeTimeConstantSeconds = 0.03f;
