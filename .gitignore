@@ -60,3 +60,8 @@ __pycache__/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ---------- Archivos locales que no van al repositorio ----------
+/BITACORA.md
+/Informe/
+/INFORME_CARRO_D_C_.pdf

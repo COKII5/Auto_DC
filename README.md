@@ -12,11 +12,11 @@ Arduino/AutoDcController/   firmware del ESP32 (Arduino IDE, core ESP32 3.x)
   SteeringServo.h           servo por LEDC a 50 Hz (sin librerías externas)
   DriveTrain.h              mezcla acelerador/giro según el modo de dirección
   DistanceSensor.h          HC-SR04 sin bloqueo (interrupción en el eco)
-Arduino/Pruebas/            pruebas por partes, manejadas por el Monitor Serie (115200)
-  TraccionTrasera/          motores hacia adelante, potencia e inversión de cada motor
-  ServoDireccion/           giro, centro (trim), ángulo máximo e inversión del servo
-  SensorFrontal/            distancia del HC-SR04 y diagnóstico del eco
-  PruebaIntegral/           todo junto, con freno por obstáculo (usa las clases del firmware)
+Arduino/Tests/              pruebas por partes con las clases del firmware, manejadas por el Monitor Serie (115200)
+  DriveMotorsTest/          motores hacia adelante, potencia e inversión de cada motor
+  SteeringServoTest/        giro, centro (trim), ángulo máximo e inversión del servo
+  DistanceSensorTest/       distancia del HC-SR04 y diagnóstico del eco
+  IntegrationTest/          todo junto, con freno por obstáculo
 Unity/                      proyecto Unity 6 (6000.0.82f1)
   Assets/Scripts/Protocol       paquetes y CRC (sin dependencias de Unity)
   Assets/Scripts/Communication  enlace UDP, sesión con el carro, RTT y estado
@@ -26,9 +26,6 @@ Unity/                      proyecto Unity 6 (6000.0.82f1)
   Assets/Scripts/UI             paneles de conexión y conducción
   Assets/Editor                 crea la escena automáticamente
 Tools/fake_car.py           carro simulado para probar Unity sin hardware
-Informe/                    copia corregida del informe del primer corte (LaTeX, IEEE)
-  compute_values.py         calcula los valores del informe y los escribe en informe_carro.tex
-BITACORA.md                 registro de cambios, pruebas, mediciones y decisiones
 ```
 
 ## Conexiones
@@ -110,7 +107,7 @@ UDP entre Unity y el ESP32, que funciona como Access Point (`192.168.4.1:4210`).
 - **Orden:** el carro ignora comandos con `seq` más viejo que el último aceptado (comparación de 16 bits con desborde, RFC 1982), así un paquete atrasado no revierte una orden más nueva.
 - **Failsafe:** si pasan 300 ms sin un comando válido, el carro detiene los motores y centra el servo.
 - **Latencia:** Unity guarda la hora de envío de cada `seq`. Cuando llega la telemetría con `ackSeq`, el RTT es `llegada − envío − ackAgeMs`; así se descuenta el tiempo que la telemetría esperó en el carro antes de salir.
-- **PWM:** acelerador y giro van de −100 a 100. El 100 % equivale a un ciclo de trabajo de 67,5 % (Ec. 11 del informe: 5 V / 7,4 V), con una rampa de 250 ms de 0 a 100 % para limitar la corriente de arranque.
+- **PWM:** acelerador y giro van de −100 a 100. El 100 % equivale a un ciclo de trabajo de 67,5 % (Ec. 12 del informe: 5 V / 7,4 V), con una rampa de 250 ms de 0 a 100 % para limitar la corriente de arranque.
 
 ## Cambiar el servo por dos N20 (giro diferencial)
 
@@ -122,13 +119,13 @@ UDP entre Unity y el ESP32, que funciona como Access Point (`192.168.4.1:4210`).
 
 - **Servo (bicicleta):** ω = v · tan(δ) / L, con δ = giro × ángulo máximo y L = distancia entre ejes.
 - **Diferencial:** v = (vᵢ + v_d) / 2 y ω = (vᵢ − v_d) / ancho de vía.
-- **Velocidad máxima:** v = 1,257 m/s (Ec. 18 del informe, motor de 500 RPM y rueda de 2,4 cm), escalada por el acelerador aplicado.
+- **Velocidad máxima:** v = 1,257 m/s (Ec. 21 del informe, motor de 500 RPM y rueda de 2,4 cm), escalada por el acelerador aplicado.
 - **Respuesta:** el motor y el servo se modelan con un retardo de primer orden (τ = 0,15 s y 0,08 s, ajustables en el Inspector).
 - La pose se integra desde el centro del eje trasero, que es el punto de referencia de ambos modelos.
 
 ## Informe del Primer Corte (Entregable 1)
 
-Estas son las peticiones del **primer corte**: el informe del vehículo (`INFORME_CARRO_D_C_.pdf`). No son las del **segundo corte**, que es el laboratorio *Experiencia Físico-Digital* (protocolos seriales Arduino–Unity, informe de máximo 8 páginas). Esas están en `../CLAUDE.md`, `../README.md` y `../Lab/`.
+Estas son las peticiones del informe del vehículo en el **primer corte**. Las del **segundo corte** están en la sección siguiente. El laboratorio *Experiencia Físico-Digital* (protocolos seriales Arduino–Unity) es un trabajo aparte, con su propio repositorio.
 
 **Objetivo:** documentar y sustentar técnicamente el diseño, el cálculo y la construcción del vehículo. No es una bitácora descriptiva: se exige justificación cuantitativa de las decisiones de diseño y validación experimental de los cálculos frente al sistema construido.
 
@@ -161,3 +158,28 @@ Estas son las peticiones del **primer corte**: el informe del vehículo (`INFORM
 | Cumplimiento del formato IEEE | 15 | No sigue IEEE | **6**: estructura similar con desviaciones notorias (columna única, secciones fuera de orden) | **9**: plantilla IEEE con desviaciones menores que no afectan la legibilidad | **15**: plantilla estricta de doble columna (tipografía, numeración de ecuaciones y figuras, secciones) sin desviaciones |
 | Redacción técnica y estructura | 15 | Dificulta la comprensión o carece de estructura argumentativa | **6**: comprensible, pero con problemas recurrentes de claridad, terminología imprecisa o estructura poco lógica | **9**: clara en general, con argumentación débil o transiciones abruptas ocasionales | **15**: clara, lenguaje técnico apropiado, argumentación lógica entre secciones, sin ambigüedad |
 | Referencias y citación | 15 | Sin referencias o no verificables | **6**: formato IEEE inconsistente o varias afirmaciones técnicas sin respaldo | **9**: formato IEEE con errores menores (numeración, orden); la mayoría de las afirmaciones respaldadas | **15**: todas las fuentes citadas y en formato IEEE correcto; toda afirmación técnica no trivial respaldada |
+
+## Informe del Segundo Corte (versión final)
+
+**Descripción:** actualizar el informe IEEE del primer corte, no solo agregando secciones nuevas sino corrigiendo y refinando lo anterior a partir de los comentarios recibidos. El informe final debe reflejar la evolución completa del proyecto, desde su concepción hasta el producto terminado.
+
+**Estructura:**
+
+1. Abstract y palabras clave (*Index Terms*)
+2. Introducción
+3. Desarrollo: secciones del primer corte corregidas y refinadas, más las secciones nuevas
+4. Análisis de resultados
+5. Conclusiones
+6. Referencias citadas en el texto según la norma IEEE
+
+El abstract, la introducción, el análisis de resultados y las conclusiones se reescriben para todo el proyecto, no solo para el primer corte.
+
+**Secciones nuevas:**
+
+- **Sensor seleccionado:** justificación de la elección, principio de funcionamiento y esquema de conexión.
+- **Modo automático:** comportamiento del carro, lógica implementada y resultados observados.
+- **Control RC en Unity:** descripción de la interfaz y del protocolo de comunicación serial.
+
+**Comparación cuantitativa (primer corte vs. prototipo final):** registrar y comparar el peso total del carro ensamblado, la velocidad máxima medida, el torque y cualquier otro parámetro proyectado al inicio, idealmente en una tabla, explicando las diferencias (cambios de diseño, componentes agregados o limitaciones del prototipo).
+
+**Entregable:** informe IEEE actualizado que corrige el primer corte, agrega las secciones del sensor, el modo automático y el control RC, incluye la comparación cuantitativa (peso, velocidad, torque) y referencia el enlace al video de funcionamiento y al repositorio de GitHub entregados en la Parte 1.
