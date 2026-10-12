@@ -11,6 +11,10 @@ namespace AutoDc.World
         private const int MinorLineSpacingPixels = 20;
         private const int MajorLinePixels = 2;
         private const float OriginMarkerSize = 0.05f;
+        private const float OriginMarkerThickness = 0.002f;
+        private const int GridAnisoLevel = 8;
+        private const float SunElevationDeg = 50f;
+        private const float SunAzimuthDeg = -30f;
 
         private static readonly Color FloorColor = new Color(0.32f, 0.34f, 0.36f);
         private static readonly Color MajorLineColor = new Color(0.5f, 0.53f, 0.56f);
@@ -28,14 +32,14 @@ namespace AutoDc.World
             floorMaterial.mainTexture = CreateGridTexture();
             floorMaterial.mainTextureScale = Vector2.one * ArenaSizeMeters;
 
-            PrimitiveFactory.CreatePart(PrimitiveType.Cube, "Origin", parent, new Vector3(0f, 0.001f, 0f),
-                new Vector3(OriginMarkerSize, 0.002f, OriginMarkerSize), OriginColor);
+            PrimitiveFactory.CreatePart(PrimitiveType.Cube, "Origin", parent, new Vector3(0f, OriginMarkerThickness * 0.5f, 0f),
+                new Vector3(OriginMarkerSize, OriginMarkerThickness, OriginMarkerSize), OriginColor);
 
             Light sun = new GameObject("Sun").AddComponent<Light>();
             sun.transform.SetParent(parent, false);
             sun.type = LightType.Directional;
             sun.shadows = LightShadows.Soft;
-            sun.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            sun.transform.rotation = Quaternion.Euler(SunElevationDeg, SunAzimuthDeg, 0f);
         }
 
         private static Texture2D CreateGridTexture()
@@ -45,7 +49,7 @@ namespace AutoDc.World
                 name = "Grid",
                 wrapMode = TextureWrapMode.Repeat,
                 filterMode = FilterMode.Trilinear,
-                anisoLevel = 8,
+                anisoLevel = GridAnisoLevel,
             };
             Color[] pixels = new Color[GridTextureSize * GridTextureSize];
             for (int row = 0; row < GridTextureSize; row++)

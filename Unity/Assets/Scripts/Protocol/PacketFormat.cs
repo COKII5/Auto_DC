@@ -11,5 +11,10 @@ namespace AutoDc.Protocol
         public const byte BrakeFlag = 0x01;
         public const byte FailsafeFlag = 0x01;
         public const int CommandLimit = 100;
+
+        public static float ToNormalized(int percent)
+        {
+            return (float)percent / CommandLimit;
+        }
     }
 }

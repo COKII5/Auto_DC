@@ -12,6 +12,9 @@ constexpr uint16_t DISTANCE_UNKNOWN_MM = 0xFFFF;
 constexpr uint8_t DRIVE_FLAG_BRAKE = 0x01;
 constexpr uint8_t TELEMETRY_FLAG_FAILSAFE = 0x01;
 constexpr int8_t COMMAND_LIMIT = 100;
+constexpr uint8_t CRC8_POLYNOMIAL = 0x07;
+constexpr uint8_t CRC8_HIGH_BIT = 0x80;
+constexpr uint8_t BITS_PER_BYTE = 8;
 
 struct DriveCommand {
   uint16_t sequence;
@@ -37,8 +40,8 @@ inline uint8_t crc8(const uint8_t* bytes, size_t length) {
   uint8_t crc = 0x00;
   for (size_t index = 0; index < length; index++) {
     crc ^= bytes[index];
-    for (uint8_t bit = 0; bit < 8; bit++) {
-      crc = (crc & 0x80) ? (uint8_t)((crc << 1) ^ 0x07) : (uint8_t)(crc << 1);
+    for (uint8_t bit = 0; bit < BITS_PER_BYTE; bit++) {
+      crc = (crc & CRC8_HIGH_BIT) ? (uint8_t)((crc << 1) ^ CRC8_POLYNOMIAL) : (uint8_t)(crc << 1);
     }
   }
   return crc;

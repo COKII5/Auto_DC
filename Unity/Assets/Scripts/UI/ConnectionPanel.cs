@@ -10,6 +10,9 @@ namespace AutoDc.UI
         private const float Width = 300f;
         private const float FieldCaptionWidth = 60f;
         private const float PercentScale = 100f;
+        private const float SectionSpacing = 8f;
+        private const float CenterButtonWidth = 70f;
+        private const float MillisecondsPerSecond = 1000f;
 
         private readonly CarSession _session;
         private string _host = CarSession.DefaultHost;
@@ -32,7 +35,7 @@ namespace AutoDc.UI
                 ToggleConnection();
             }
             DrawLinkStatus();
-            GUILayout.Space(8f);
+            GUILayout.Space(SectionSpacing);
             GUILayout.Label("AJUSTES", HudTheme.Title);
             DrawSettings();
             GUILayout.EndVertical();
@@ -78,7 +81,7 @@ namespace AutoDc.UI
             {
                 GUILayout.Label($"RTT: {monitor.LastRttMs:0.0} ms  (prom. {monitor.SmoothedRttMs:0.0} ms)", HudTheme.Label);
                 GUILayout.Label($"Telemetría: {monitor.TelemetryRateHz} Hz   Paquetes corruptos: {_session.CorruptPackets}", HudTheme.Label);
-                GUILayout.Label($"Carro encendido hace {monitor.LastTelemetry.UptimeMs / 1000f:0} s", HudTheme.Label);
+                GUILayout.Label($"Carro encendido hace {monitor.LastTelemetry.UptimeMs / MillisecondsPerSecond:0} s", HudTheme.Label);
             }
             string error = _inputError.Length > 0 ? _inputError : _session.LastError;
             if (error.Length > 0)
@@ -90,12 +93,12 @@ namespace AutoDc.UI
         private void DrawSettings()
         {
             GUILayout.Label($"Potencia máxima: {_session.ThrottleLimit * PercentScale:0} %", HudTheme.Label);
-            _session.ThrottleLimit = GUILayout.HorizontalSlider(_session.ThrottleLimit, CarSession.MinThrottleLimit, 1f);
+            _session.ThrottleLimit = GUILayout.HorizontalSlider(_session.ThrottleLimit, CarSession.MinThrottleLimit, CarSession.MaxThrottleLimit);
             GUILayout.Label($"Trim del servo: {_session.SteeringTrimDeg:+0;-0;0}°", HudTheme.Label);
             GUILayout.BeginHorizontal();
             float trim = GUILayout.HorizontalSlider(_session.SteeringTrimDeg, -CarSession.MaxSteeringTrimDeg, CarSession.MaxSteeringTrimDeg);
             _session.SteeringTrimDeg = Mathf.RoundToInt(trim);
-            if (GUILayout.Button("Centrar", GUILayout.Width(70f)))
+            if (GUILayout.Button("Centrar", GUILayout.Width(CenterButtonWidth)))
             {
                 _session.SteeringTrimDeg = 0;
             }

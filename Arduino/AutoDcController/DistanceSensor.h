@@ -5,18 +5,20 @@
 #include "CarProtocol.h"
 #include "DriveConfig.h"
 
-namespace distance_sensor_internal {
-volatile uint32_t echoRiseUs = 0;
-volatile uint32_t echoWidthUs = 0;
-volatile bool echoCaptured = false;
+namespace echoCapture {
+volatile uint32_t riseUs = 0;
+volatile uint32_t widthUs = 0;
+volatile bool captured = false;
+volatile uint32_t edgeCount = 0;
 
 void IRAM_ATTR onEchoChange() {
   uint32_t nowUs = micros();
+  edgeCount = edgeCount + 1;
   if (digitalRead(PIN_DISTANCE_ECHO) == HIGH) {
-    echoRiseUs = nowUs;
+    riseUs = nowUs;
   } else {
-    echoWidthUs = nowUs - echoRiseUs;
-    echoCaptured = true;
+    widthUs = nowUs - riseUs;
+    captured = true;
   }
 }
 }
@@ -27,39 +29,50 @@ class DistanceSensor {
     pinMode(PIN_DISTANCE_TRIGGER, OUTPUT);
     digitalWrite(PIN_DISTANCE_TRIGGER, LOW);
     pinMode(PIN_DISTANCE_ECHO, INPUT);
-    attachInterrupt(digitalPinToInterrupt(PIN_DISTANCE_ECHO), distance_sensor_internal::onEchoChange, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(PIN_DISTANCE_ECHO), echoCapture::onEchoChange, CHANGE);
   }
 
-  void update(uint32_t nowUs) {
+  bool update(uint32_t nowUs) {
     uint32_t elapsedUs = nowUs - cycleStartUs;
     switch (state) {
       case State::IDLE:
         if (elapsedUs >= DISTANCE_MEASURE_PERIOD_US) {
-          distance_sensor_internal::echoCaptured = false;
+          echoCapture::captured = false;
           digitalWrite(PIN_DISTANCE_TRIGGER, HIGH);
           cycleStartUs = nowUs;
           state = State::TRIGGERING;
         }
-        break;
+        return false;
       case State::TRIGGERING:
         if (elapsedUs >= DISTANCE_TRIGGER_PULSE_US) {
           digitalWrite(PIN_DISTANCE_TRIGGER, LOW);
           state = State::WAITING_ECHO;
         }
-        break;
+        return false;
       case State::WAITING_ECHO:
-        if (distance_sensor_internal::echoCaptured) {
-          latestDistanceMm = echoWidthToMillimeters(distance_sensor_internal::echoWidthUs);
-          state = State::IDLE;
+        if (echoCapture::captured) {
+          latestEchoWidthUs = echoCapture::widthUs;
+          latestDistanceMm = echoWidthToMillimeters(latestEchoWidthUs);
         } else if (elapsedUs >= DISTANCE_ECHO_TIMEOUT_US) {
           latestDistanceMm = DISTANCE_UNKNOWN_MM;
-          state = State::IDLE;
+        } else {
+          return false;
         }
-        break;
+        state = State::IDLE;
+        return true;
     }
+    return false;
   }
 
   uint16_t distanceMm() const { return latestDistanceMm; }
+
+  uint32_t lastEchoWidthUs() const { return latestEchoWidthUs; }
+
+  static uint32_t takeEchoEdgeCount() {
+    uint32_t edges = echoCapture::edgeCount;
+    echoCapture::edgeCount = 0;
+    return edges;
+  }
 
  private:
   enum class State : uint8_t { IDLE, TRIGGERING, WAITING_ECHO };
@@ -74,5 +87,6 @@ class DistanceSensor {
 
   State state = State::IDLE;
   uint32_t cycleStartUs = 0;
+  uint32_t latestEchoWidthUs = 0;
   uint16_t latestDistanceMm = DISTANCE_UNKNOWN_MM;
 };

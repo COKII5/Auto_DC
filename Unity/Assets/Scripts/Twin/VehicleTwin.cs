@@ -5,14 +5,19 @@ namespace AutoDc.Twin
 {
     public sealed class VehicleTwin : MonoBehaviour
     {
+        private const float MinDimensionMeters = 0.01f;
+        private const float MinWheelRadiusMeters = 0.001f;
+        private const float MaxSteerLimitDeg = 60f;
+        private const float DegreesPerTurn = 360f;
+
         [Header("Geometria (medir en el carro real)")]
         [SerializeField] private float _wheelBaseMeters = 0.12f;
         [SerializeField] private float _trackWidthMeters = 0.10f;
-        [Tooltip("Radio de rueda del informe: 1,75 cm.")]
+        [Tooltip("Radio de rueda medido en el carro: 2,4 cm.")]
         [SerializeField] private float _wheelRadiusMeters = 0.024f;
 
         [Header("Respuesta")]
-        [Tooltip("Velocidad lineal nominal del informe, Ec. (18).")]
+        [Tooltip("Velocidad lineal sin carga a 6 V del informe, Ec. (19).")]
         [SerializeField] private float _maxSpeedMetersPerSecond = 1.257f;
         [SerializeField] private float _motorTimeConstantSeconds = 0.15f;
         [SerializeField] private float _brakeTimeConstantSeconds = 0.03f;
@@ -93,7 +98,7 @@ namespace AutoDc.Twin
 
         private float AdvanceSpin(float spinDeg, float wheelSpeed, float deltaTime)
         {
-            return Mathf.Repeat(spinDeg + wheelSpeed * deltaTime / _wheelRadiusMeters * Mathf.Rad2Deg, 360f);
+            return Mathf.Repeat(spinDeg + wheelSpeed * deltaTime / _wheelRadiusMeters * Mathf.Rad2Deg, DegreesPerTurn);
         }
 
         private static float FirstOrderLag(float current, float target, float timeConstant, float deltaTime)
@@ -107,10 +112,10 @@ namespace AutoDc.Twin
 
         private void OnValidate()
         {
-            _wheelBaseMeters = Mathf.Max(0.01f, _wheelBaseMeters);
-            _trackWidthMeters = Mathf.Max(0.01f, _trackWidthMeters);
-            _wheelRadiusMeters = Mathf.Max(0.001f, _wheelRadiusMeters);
-            _offlineMaxSteerDeg = Mathf.Clamp(_offlineMaxSteerDeg, 0f, 60f);
+            _wheelBaseMeters = Mathf.Max(MinDimensionMeters, _wheelBaseMeters);
+            _trackWidthMeters = Mathf.Max(MinDimensionMeters, _trackWidthMeters);
+            _wheelRadiusMeters = Mathf.Max(MinWheelRadiusMeters, _wheelRadiusMeters);
+            _offlineMaxSteerDeg = Mathf.Clamp(_offlineMaxSteerDeg, 0f, MaxSteerLimitDeg);
         }
     }
 }

@@ -1,38 +1,28 @@
 #include <Arduino.h>
 
-constexpr uint32_t SERIAL_BAUD_RATE = 115200;
-
-constexpr uint8_t PIN_SERVO = 13;
-constexpr uint32_t SERVO_PWM_FREQUENCY_HZ = 50;
-constexpr uint8_t SERVO_PWM_RESOLUTION_BITS = 14;
-constexpr float SERVO_PERIOD_US = 1000000.0f / SERVO_PWM_FREQUENCY_HZ;
-constexpr float SERVO_MIN_PULSE_US = 500.0f;
-constexpr float SERVO_MAX_PULSE_US = 2500.0f;
-constexpr float SERVO_RANGE_DEG = 180.0f;
-constexpr float SERVO_CENTER_DEG = 90.0f;
-constexpr uint32_t SERVO_MAX_DUTY = (1u << SERVO_PWM_RESOLUTION_BITS) - 1;
+#include "../../AutoDcController/DriveConfig.h"
+#include "../../AutoDcController/SteeringServo.h"
 
 constexpr int STEER_STEP_DEG = 5;
 constexpr int MIN_MAX_STEER_DEG = 5;
 constexpr int LIMIT_MAX_STEER_DEG = 60;
-constexpr int INITIAL_MAX_STEER_DEG = 30;
-constexpr int MAX_TRIM_DEG = 15;
+constexpr int MAX_TRIM_DEG = (int)SERVO_MAX_TRIM_DEG;
 constexpr uint32_t SWEEP_STEP_PERIOD_MS = 20;
+
+SteeringServo steeringServo{PIN_SERVO};
 
 int steerDeg = 0;
 int trimDeg = 0;
-int maxSteerDeg = INITIAL_MAX_STEER_DEG;
-bool inverted = false;
+int maxSteerDeg = SERVO_MAX_STEER_DEG;
 bool sweeping = false;
 int sweepDirection = 1;
 uint32_t lastSweepStepMs = 0;
 
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
-  if (!ledcAttach(PIN_SERVO, SERVO_PWM_FREQUENCY_HZ, SERVO_PWM_RESOLUTION_BITS)) {
+  if (!steeringServo.begin()) {
     Serial.println("Error: no se pudo asignar el PWM al pin del servo");
   }
-  applyAngle();
   printHelp();
 }
 
@@ -43,14 +33,14 @@ void loop() {
 
 void handleSerialInput() {
   while (Serial.available() > 0) {
-    char key = (char)Serial.read();
+    char key = (char)tolower(Serial.read());
     if (key == '\r' || key == '\n' || key == ' ') {
       continue;
     }
     if (key != 'b') {
       sweeping = false;
     }
-    switch (tolower(key)) {
+    switch (key) {
       case 'a':
         moveSteer(-STEER_STEP_DEG);
         break;
@@ -58,9 +48,7 @@ void handleSerialInput() {
         moveSteer(STEER_STEP_DEG);
         break;
       case 'c':
-        steerDeg = 0;
-        applyAngle();
-        reportState();
+        moveSteer(-steerDeg);
         break;
       case 'b':
         sweeping = true;
@@ -79,10 +67,7 @@ void handleSerialInput() {
         changeMaxSteer(-STEER_STEP_DEG);
         break;
       case 'i':
-        inverted = !inverted;
-        applyAngle();
-        Serial.printf("Sentido invertido: %s -> en DriveConfig.h: SERVO_INVERTED = %s\n", inverted ? "si" : "no",
-                      inverted ? "true" : "false");
+        toggleInversion();
         break;
       case '?':
         printHelp();
@@ -95,13 +80,14 @@ void handleSerialInput() {
 
 void moveSteer(int deltaDeg) {
   steerDeg = constrain(steerDeg + deltaDeg, -maxSteerDeg, maxSteerDeg);
-  applyAngle();
+  steeringServo.setSteeringDegrees(steerDeg);
   reportState();
 }
 
 void changeTrim(int deltaDeg) {
   trimDeg = constrain(trimDeg + deltaDeg, -MAX_TRIM_DEG, MAX_TRIM_DEG);
-  applyAngle();
+  steeringServo.setTrim(trimDeg);
+  steeringServo.setSteeringDegrees(steerDeg);
   Serial.printf("Centro: %.0f grados (trim %+d) -> en DriveConfig.h: SERVO_CENTER_DEG = %.1f\n",
                 SERVO_CENTER_DEG + trimDeg, trimDeg, SERVO_CENTER_DEG + trimDeg);
 }
@@ -109,9 +95,16 @@ void changeTrim(int deltaDeg) {
 void changeMaxSteer(int deltaDeg) {
   maxSteerDeg = constrain(maxSteerDeg + deltaDeg, MIN_MAX_STEER_DEG, LIMIT_MAX_STEER_DEG);
   steerDeg = constrain(steerDeg, -maxSteerDeg, maxSteerDeg);
-  applyAngle();
+  steeringServo.setSteeringDegrees(steerDeg);
   Serial.printf("Angulo maximo: %d grados -> en DriveConfig.h: SERVO_MAX_STEER_DEG = %d\n", maxSteerDeg,
                 maxSteerDeg);
+}
+
+void toggleInversion() {
+  steeringServo.setInverted(!steeringServo.isInverted());
+  steeringServo.setSteeringDegrees(steerDeg);
+  Serial.printf("Sentido invertido: %s -> en DriveConfig.h: SERVO_INVERTED = %s\n",
+                steeringServo.isInverted() ? "si" : "no", steeringServo.isInverted() ? "true" : "false");
 }
 
 void advanceSweep(uint32_t nowMs) {
@@ -124,15 +117,7 @@ void advanceSweep(uint32_t nowMs) {
     steerDeg = constrain(steerDeg, -maxSteerDeg, maxSteerDeg);
     sweepDirection = -sweepDirection;
   }
-  applyAngle();
-}
-
-void applyAngle() {
-  int direction = inverted ? -1 : 1;
-  float degrees = SERVO_CENTER_DEG + trimDeg + direction * steerDeg;
-  float clampedDegrees = constrain(degrees, 0.0f, SERVO_RANGE_DEG);
-  float pulseUs = SERVO_MIN_PULSE_US + (SERVO_MAX_PULSE_US - SERVO_MIN_PULSE_US) * clampedDegrees / SERVO_RANGE_DEG;
-  ledcWrite(PIN_SERVO, (uint32_t)(pulseUs * SERVO_MAX_DUTY / SERVO_PERIOD_US));
+  steeringServo.setSteeringDegrees(steerDeg);
 }
 
 void reportState() {

@@ -13,7 +13,6 @@ namespace AutoDc.UI
         private const float MillimetersPerMeter = 1000f;
         private const int ObstacleWarningMm = 200;
         private const float MetersPerSecondToKmh = 3.6f;
-        private const float CommandScale = PacketFormat.CommandLimit;
         private const string ControlsHelp =
             "W/S o flechas: acelerar / reversa   A/D: girar   Espacio: frenar\n" +
             "Gamepad: gatillos o stick izq., A frena   R: reiniciar   C: cámara";
@@ -24,35 +23,42 @@ namespace AutoDc.UI
             GUILayout.BeginVertical(HudTheme.Panel);
             GUILayout.Label("CONDUCCIÓN", HudTheme.Title);
             GUILayout.Label($"Gemelo: {SourceText(source)}   Dirección: {ModeText(twin.ActiveSteeringMode)}", HudTheme.Label);
-
-            DriveCommand command = session.CurrentCommand;
-            HudTheme.SignedBar("Acelerador", command.Throttle / CommandScale, HudTheme.CommandedBar, $"{command.Throttle} %");
-            HudTheme.SignedBar("Giro", command.Steering / CommandScale, HudTheme.CommandedBar, $"{command.Steering} %");
+            DrawCommandBars(session.CurrentCommand);
             if (source == TwinSource.Telemetry)
             {
-                CarTelemetry telemetry = session.Monitor.LastTelemetry;
-                HudTheme.SignedBar("Acel. real", telemetry.AppliedThrottle / CommandScale, HudTheme.AppliedBar, $"{telemetry.AppliedThrottle} %");
-                HudTheme.SignedBar("Giro real", telemetry.AppliedSteering / CommandScale, HudTheme.AppliedBar, $"{telemetry.AppliedSteering} %");
+                DrawAppliedBars(session.Monitor.LastTelemetry);
             }
-
-            float speed = twin.ForwardSpeed;
-            GUILayout.Label($"Velocidad: {speed:0.00} m/s ({speed * MetersPerSecondToKmh:0.0} km/h)   Ruedas: {twin.FrontWheelAngleDeg:+0.0;-0.0;0.0}°", HudTheme.Label);
+            DrawMotion(twin);
             if (source == TwinSource.Telemetry)
             {
                 DrawDistance(session.Monitor.LastTelemetry);
             }
-            if (command.Brake)
-            {
-                HudTheme.ColoredLabel("FRENO", HudTheme.Warning);
-            }
-            if (source == TwinSource.Halted || (source == TwinSource.Telemetry && session.Monitor.LastTelemetry.Failsafe))
-            {
-                HudTheme.ColoredLabel("FAILSAFE: motores detenidos y servo centrado", HudTheme.Bad);
-            }
+            DrawWarnings(session, source);
             GUILayout.FlexibleSpace();
             HudTheme.ColoredLabel(ControlsHelp, HudTheme.Muted);
             GUILayout.EndVertical();
             GUILayout.EndArea();
+        }
+
+        private static void DrawCommandBars(DriveCommand command)
+        {
+            HudTheme.SignedBar("Acelerador", PacketFormat.ToNormalized(command.Throttle), HudTheme.CommandedBar, $"{command.Throttle} %");
+            HudTheme.SignedBar("Giro", PacketFormat.ToNormalized(command.Steering), HudTheme.CommandedBar, $"{command.Steering} %");
+        }
+
+        private static void DrawAppliedBars(CarTelemetry telemetry)
+        {
+            HudTheme.SignedBar("Acel. real", PacketFormat.ToNormalized(telemetry.AppliedThrottle), HudTheme.AppliedBar,
+                $"{telemetry.AppliedThrottle} %");
+            HudTheme.SignedBar("Giro real", PacketFormat.ToNormalized(telemetry.AppliedSteering), HudTheme.AppliedBar,
+                $"{telemetry.AppliedSteering} %");
+        }
+
+        private static void DrawMotion(VehicleTwin twin)
+        {
+            float speed = twin.ForwardSpeed;
+            GUILayout.Label($"Velocidad: {speed:0.00} m/s ({speed * MetersPerSecondToKmh:0.0} km/h)   " +
+                $"Ruedas: {twin.FrontWheelAngleDeg:+0.0;-0.0;0.0}°", HudTheme.Label);
         }
 
         private static void DrawDistance(CarTelemetry telemetry)
@@ -64,6 +70,18 @@ namespace AutoDc.UI
             }
             string text = $"Distancia al obstáculo: {telemetry.DistanceMm / MillimetersPerMeter:0.00} m";
             HudTheme.ColoredLabel(text, telemetry.DistanceMm <= ObstacleWarningMm ? HudTheme.Warning : HudTheme.Good);
+        }
+
+        private static void DrawWarnings(CarSession session, TwinSource source)
+        {
+            if (session.CurrentCommand.Brake)
+            {
+                HudTheme.ColoredLabel("FRENO", HudTheme.Warning);
+            }
+            if (source == TwinSource.Halted || (source == TwinSource.Telemetry && session.Monitor.LastTelemetry.Failsafe))
+            {
+                HudTheme.ColoredLabel("FAILSAFE: motores detenidos y servo centrado", HudTheme.Bad);
+            }
         }
 
         private static string SourceText(TwinSource source)

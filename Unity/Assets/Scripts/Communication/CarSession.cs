@@ -10,6 +10,7 @@ namespace AutoDc.Communication
         public const string DefaultHost = "192.168.4.1";
         public const int DefaultPort = 4210;
         public const float MinThrottleLimit = 0.2f;
+        public const float MaxThrottleLimit = 1f;
         public const int MaxSteeringTrimDeg = 15;
 
         private const float SendPeriodSeconds = 0.02f;
@@ -19,7 +20,7 @@ namespace AutoDc.Communication
         private readonly LinkMonitor _monitor = new LinkMonitor();
         private ushort _sequence;
         private float _secondsSinceSend;
-        private float _throttleLimit = 1f;
+        private float _throttleLimit = MaxThrottleLimit;
         private int _steeringTrimDeg;
 
         public LinkMonitor Monitor => _monitor;
@@ -32,13 +33,13 @@ namespace AutoDc.Communication
         public float ThrottleLimit
         {
             get => _throttleLimit;
-            set => _throttleLimit = Math.Max(MinThrottleLimit, Math.Min(1f, value));
+            set => _throttleLimit = Math.Clamp(value, MinThrottleLimit, MaxThrottleLimit);
         }
 
         public int SteeringTrimDeg
         {
             get => _steeringTrimDeg;
-            set => _steeringTrimDeg = Math.Max(-MaxSteeringTrimDeg, Math.Min(MaxSteeringTrimDeg, value));
+            set => _steeringTrimDeg = Math.Clamp(value, -MaxSteeringTrimDeg, MaxSteeringTrimDeg);
         }
 
         public bool Connect(string host, int port)
@@ -118,7 +119,7 @@ namespace AutoDc.Communication
 
         private static sbyte ToPercent(float normalized)
         {
-            float clamped = Math.Max(-1f, Math.Min(1f, normalized));
+            float clamped = Math.Clamp(normalized, -1f, 1f);
             return (sbyte)Math.Round(clamped * PacketFormat.CommandLimit);
         }
     }

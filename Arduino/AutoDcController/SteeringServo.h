@@ -18,10 +18,21 @@ class SteeringServo {
     trimDegrees = constrain((float)trimDeg, -SERVO_MAX_TRIM_DEG, SERVO_MAX_TRIM_DEG);
   }
 
+  void setInverted(bool value) {
+    inverted = value;
+  }
+
+  bool isInverted() const {
+    return inverted;
+  }
+
   void setSteering(int8_t percent) {
-    float direction = SERVO_INVERTED ? -1.0f : 1.0f;
-    float steerDegrees = direction * percent * SERVO_MAX_STEER_DEG / 100.0f;
-    writeAngle(SERVO_CENTER_DEG + trimDegrees + steerDegrees);
+    setSteeringDegrees(percent * SERVO_MAX_STEER_DEG / 100.0f);
+  }
+
+  void setSteeringDegrees(float steerDegrees) {
+    float direction = inverted ? -1.0f : 1.0f;
+    writeAngle(SERVO_CENTER_DEG + trimDegrees + direction * steerDegrees);
   }
 
   void center() {
@@ -44,5 +55,6 @@ class SteeringServo {
 
   const uint8_t signalPin;
   float trimDegrees = 0.0f;
+  bool inverted = SERVO_INVERTED;
   uint32_t lastDuty = UINT32_MAX;
 };

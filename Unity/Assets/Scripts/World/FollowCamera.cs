@@ -5,6 +5,8 @@ namespace AutoDc.World
 {
     public sealed class FollowCamera : MonoBehaviour
     {
+        private const float TopDownPitchDeg = 90f;
+
         [SerializeField] private Vector3 _chaseOffset = new Vector3(0f, 0.22f, -0.42f);
         [SerializeField] private float _chaseLookAhead = 0.08f;
         [SerializeField] private float _topDownHeight = 2.2f;
@@ -57,7 +59,7 @@ namespace AutoDc.World
         {
             if (_topDown)
             {
-                return Quaternion.Euler(90f, 0f, 0f);
+                return Quaternion.Euler(TopDownPitchDeg, 0f, 0f);
             }
             Vector3 focus = _target.position + _target.forward * _chaseLookAhead;
             return Quaternion.LookRotation(focus - DesiredPosition(), Vector3.up);

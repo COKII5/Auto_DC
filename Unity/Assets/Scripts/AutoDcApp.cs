@@ -11,7 +11,6 @@ namespace AutoDc
     public sealed class AutoDcApp : MonoBehaviour
     {
         private const int TargetFrameRate = 60;
-        private const float CommandScale = PacketFormat.CommandLimit;
         private const float CameraNearClip = 0.01f;
         private const float CameraFieldOfView = 55f;
 
@@ -62,11 +61,11 @@ namespace AutoDc
             {
                 case TwinSource.Telemetry:
                     CarTelemetry telemetry = _session.Monitor.LastTelemetry;
-                    _twin.Drive(telemetry.AppliedThrottle / CommandScale, telemetry.AppliedSteering / CommandScale,
+                    _twin.Drive(PacketFormat.ToNormalized(telemetry.AppliedThrottle), PacketFormat.ToNormalized(telemetry.AppliedSteering),
                         command.Brake, telemetry.SteeringMode, telemetry.MaxSteerDeg, deltaTime);
                     break;
                 case TwinSource.LocalSimulation:
-                    _twin.Drive(command.Throttle / CommandScale, command.Steering / CommandScale,
+                    _twin.Drive(PacketFormat.ToNormalized(command.Throttle), PacketFormat.ToNormalized(command.Steering),
                         command.Brake, _twin.OfflineSteeringMode, _twin.OfflineMaxSteerDeg, deltaTime);
                     break;
                 default:

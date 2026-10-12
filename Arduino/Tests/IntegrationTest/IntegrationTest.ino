@@ -1,9 +1,9 @@
 #include <Arduino.h>
 
+#include "../../AutoDcController/CarProtocol.h"
 #include "../../AutoDcController/DistanceSensor.h"
 #include "../../AutoDcController/DriveConfig.h"
-#include "../../AutoDcController/MotorDriver.h"
-#include "../../AutoDcController/SteeringServo.h"
+#include "../../AutoDcController/DriveTrain.h"
 
 constexpr uint32_t RUN_TIMEOUT_MS = 2000;
 constexpr uint32_t STATUS_PERIOD_MS = 500;
@@ -16,9 +16,7 @@ constexpr int STEER_STEP_PERCENT = 20;
 
 enum class Motion : int8_t { REVERSE = -1, STOPPED = 0, FORWARD = 1 };
 
-MotorDriver leftMotor{PIN_LEFT_ENABLE, PIN_LEFT_FORWARD, PIN_LEFT_REVERSE, LEFT_MOTOR_INVERTED};
-MotorDriver rightMotor{PIN_RIGHT_ENABLE, PIN_RIGHT_FORWARD, PIN_RIGHT_REVERSE, RIGHT_MOTOR_INVERTED};
-SteeringServo steeringServo{PIN_SERVO};
+DriveTrain driveTrain;
 DistanceSensor distanceSensor;
 
 Motion motion = Motion::STOPPED;
@@ -33,7 +31,7 @@ uint32_t lastStatusMs = 0;
 
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
-  if (!leftMotor.begin() || !rightMotor.begin() || !steeringServo.begin()) {
+  if (!driveTrain.begin()) {
     Serial.println("Error: no se pudo asignar el PWM a los pines de DriveConfig.h");
   }
   distanceSensor.begin();
@@ -46,8 +44,7 @@ void loop() {
   distanceSensor.update(micros());
   enforceObstacleBrake();
   stopIfTimedOut(nowMs);
-  leftMotor.update(nowMs - lastUpdateMs);
-  rightMotor.update(nowMs - lastUpdateMs);
+  driveTrain.update(nowMs - lastUpdateMs);
   lastUpdateMs = nowMs;
   printStatusIfDue(nowMs);
 }
@@ -103,13 +100,12 @@ void startMotion(Motion requested, uint32_t nowMs) {
   }
   motion = requested;
   lastMotionCommandMs = nowMs;
-  applyMotorTargets();
+  applyDrive(false);
 }
 
 void stopMotion(const char* reason) {
   motion = Motion::STOPPED;
-  leftMotor.brake();
-  rightMotor.brake();
+  applyDrive(true);
   Serial.println(reason);
 }
 
@@ -135,22 +131,23 @@ bool isObstacleAhead() {
 void changeSpeed(int deltaPercent) {
   speedPercent = constrain(speedPercent + deltaPercent, MIN_SPEED_PERCENT, MAX_SPEED_PERCENT);
   Serial.printf("Potencia: %d %%\n", speedPercent);
-  applyMotorTargets();
+  if (motion != Motion::STOPPED) {
+    applyDrive(false);
+  }
 }
 
 void changeSteering(int deltaPercent) {
   steeringPercent = constrain(steeringPercent + deltaPercent, -COMMAND_LIMIT, (int)COMMAND_LIMIT);
-  steeringServo.setSteering((int8_t)steeringPercent);
+  applyDrive(motion == Motion::STOPPED);
   Serial.printf("Direccion: %+d %%\n", steeringPercent);
 }
 
-void applyMotorTargets() {
-  if (motion == Motion::STOPPED) {
-    return;
-  }
-  float target = (float)speedPercent * (int)motion;
-  leftMotor.setTarget(target);
-  rightMotor.setTarget(target);
+void applyDrive(bool brake) {
+  DriveCommand command = {};
+  command.throttle = (int8_t)(speedPercent * (int)motion);
+  command.steering = (int8_t)steeringPercent;
+  command.brake = brake;
+  driveTrain.apply(command);
 }
 
 void printStatusIfDue(uint32_t nowMs) {

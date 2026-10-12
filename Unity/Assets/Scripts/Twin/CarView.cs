@@ -8,6 +8,12 @@ namespace AutoDc.Twin
         private const float ChassisThickness = 0.004f;
         private const float ChassisOverhang = 0.025f;
         private const float WheelMarkerScale = 0.45f;
+        private const float WheelMarkerHeightFactor = 0.55f;
+        private const float WheelMarkerWidthFactor = 1.1f;
+        private const float WheelMarkerDepthFactor = 0.25f;
+        private const float TireRollDeg = 90f;
+        private const float TrailMinVertexDistance = 0.01f;
+        private const float TrailPitchDeg = 90f;
         private const float TrailSeconds = 20f;
         private const float TrailWidth = 0.01f;
         private const float TrailHeight = 0.002f;
@@ -22,6 +28,17 @@ namespace AutoDc.Twin
         private static readonly Color BatteryColor = new Color(0.2f, 0.45f, 0.75f);
         private static readonly Color ServoColor = new Color(0.15f, 0.3f, 0.85f);
         private static readonly Color TrailColor = new Color(0.1f, 0.6f, 1f, 0.7f);
+
+        private static readonly Vector3 BatteryOffset = new Vector3(0f, 0.01f, 0.005f);
+        private static readonly Vector3 BatterySize = new Vector3(0.04f, 0.02f, 0.065f);
+        private static readonly Vector3 BridgeOffset = new Vector3(0f, 0.022f, 0.045f);
+        private static readonly Vector3 BridgeSize = new Vector3(0.043f, 0.004f, 0.043f);
+        private static readonly Vector3 HeatsinkOffset = new Vector3(0f, 0.034f, 0.045f);
+        private static readonly Vector3 HeatsinkSize = new Vector3(0.023f, 0.02f, 0.016f);
+        private static readonly Vector3 BoardOffset = new Vector3(0f, 0.004f, 0.09f);
+        private static readonly Vector3 BoardSize = new Vector3(0.028f, 0.006f, 0.05f);
+        private static readonly Vector3 ServoOffsetFromFrontAxle = new Vector3(0f, 0.011f, 0.005f);
+        private static readonly Vector3 ServoSize = new Vector3(0.023f, 0.022f, 0.012f);
 
         private Transform _frontLeftPivot;
         private Transform _frontRightPivot;
@@ -38,7 +55,7 @@ namespace AutoDc.Twin
             float chassisWidth = trackWidth - 2f * WheelWidth;
             float deckHeight = wheelRadius + ChassisThickness * 0.5f;
 
-            PrimitiveFactory.CreatePart(PrimitiveType.Cube, "Chassis", transform, new Vector3(0f, wheelRadius, wheelBase * 0.5f),
+            CreateBox("Chassis", new Vector3(0f, wheelRadius, wheelBase * 0.5f),
                 new Vector3(chassisWidth, ChassisThickness, chassisLength), ChassisColor);
             BuildElectronics(wheelBase, deckHeight);
 
@@ -72,16 +89,18 @@ namespace AutoDc.Twin
 
         private void BuildElectronics(float wheelBase, float deckHeight)
         {
-            PrimitiveFactory.CreatePart(PrimitiveType.Cube, "Batteries", transform, new Vector3(0f, deckHeight + 0.01f, 0.005f),
-                new Vector3(0.04f, 0.02f, 0.065f), BatteryColor);
-            PrimitiveFactory.CreatePart(PrimitiveType.Cube, "L298N", transform, new Vector3(0f, deckHeight + 0.022f, 0.045f),
-                new Vector3(0.043f, 0.004f, 0.043f), BridgeColor);
-            PrimitiveFactory.CreatePart(PrimitiveType.Cube, "L298NHeatsink", transform, new Vector3(0f, deckHeight + 0.034f, 0.045f),
-                new Vector3(0.023f, 0.02f, 0.016f), HeatsinkColor);
-            PrimitiveFactory.CreatePart(PrimitiveType.Cube, "ESP32", transform, new Vector3(0f, deckHeight + 0.004f, 0.09f),
-                new Vector3(0.028f, 0.006f, 0.05f), BoardColor);
-            PrimitiveFactory.CreatePart(PrimitiveType.Cube, "SteeringServo", transform, new Vector3(0f, deckHeight + 0.011f, wheelBase + 0.005f),
-                new Vector3(0.023f, 0.022f, 0.012f), ServoColor);
+            Vector3 deck = new Vector3(0f, deckHeight, 0f);
+            Vector3 frontAxle = new Vector3(0f, deckHeight, wheelBase);
+            CreateBox("Batteries", deck + BatteryOffset, BatterySize, BatteryColor);
+            CreateBox("L298N", deck + BridgeOffset, BridgeSize, BridgeColor);
+            CreateBox("L298NHeatsink", deck + HeatsinkOffset, HeatsinkSize, HeatsinkColor);
+            CreateBox("ESP32", deck + BoardOffset, BoardSize, BoardColor);
+            CreateBox("SteeringServo", frontAxle + ServoOffsetFromFrontAxle, ServoSize, ServoColor);
+        }
+
+        private void CreateBox(string objectName, Vector3 localPosition, Vector3 size, Color color)
+        {
+            PrimitiveFactory.CreatePart(PrimitiveType.Cube, objectName, transform, localPosition, size, color);
         }
 
         private Transform CreatePivot(string objectName, Vector3 localPosition)
@@ -100,9 +119,10 @@ namespace AutoDc.Twin
             float diameter = radius * 2f;
             GameObject tire = PrimitiveFactory.CreatePart(PrimitiveType.Cylinder, "Tire", spinner, Vector3.zero,
                 new Vector3(diameter, WheelWidth * 0.5f, diameter), WheelColor);
-            tire.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
-            PrimitiveFactory.CreatePart(PrimitiveType.Cube, "Marker", spinner, new Vector3(0f, radius * 0.55f, 0f),
-                new Vector3(WheelWidth * 1.1f, radius * WheelMarkerScale, radius * 0.25f), WheelMarkerColor);
+            tire.transform.localRotation = Quaternion.Euler(0f, 0f, TireRollDeg);
+            PrimitiveFactory.CreatePart(PrimitiveType.Cube, "Marker", spinner, new Vector3(0f, radius * WheelMarkerHeightFactor, 0f),
+                new Vector3(WheelWidth * WheelMarkerWidthFactor, radius * WheelMarkerScale, radius * WheelMarkerDepthFactor),
+                WheelMarkerColor);
             return spinner;
         }
 
@@ -118,9 +138,9 @@ namespace AutoDc.Twin
             TrailRenderer trail = anchor.gameObject.AddComponent<TrailRenderer>();
             trail.time = TrailSeconds;
             trail.widthMultiplier = TrailWidth;
-            trail.minVertexDistance = 0.01f;
+            trail.minVertexDistance = TrailMinVertexDistance;
             trail.alignment = LineAlignment.TransformZ;
-            anchor.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            anchor.localRotation = Quaternion.Euler(TrailPitchDeg, 0f, 0f);
             trail.material = new Material(trailShader);
             trail.startColor = TrailColor;
             trail.endColor = new Color(TrailColor.r, TrailColor.g, TrailColor.b, 0f);

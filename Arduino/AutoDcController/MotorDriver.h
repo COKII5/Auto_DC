@@ -22,6 +22,14 @@ class MotorDriver {
     braking = false;
   }
 
+  void setInverted(bool value) {
+    inverted = value;
+  }
+
+  bool isInverted() const {
+    return inverted;
+  }
+
   void stop() {
     targetPercent = 0.0f;
     currentPercent = 0.0f;
@@ -62,7 +70,7 @@ class MotorDriver {
   const uint8_t enablePin;
   const uint8_t forwardPin;
   const uint8_t reversePin;
-  const bool inverted;
+  bool inverted;
   float targetPercent = 0.0f;
   float currentPercent = 0.0f;
   bool braking = false;

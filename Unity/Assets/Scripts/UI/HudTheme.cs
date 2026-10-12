@@ -16,6 +16,12 @@ namespace AutoDc.UI
         private const float CaptionWidth = 92f;
         private const float BarHeight = 10f;
         private const float ValueWidth = 48f;
+        private const float MinBarWidth = 10f;
+        private const float BarVerticalOffset = 2f;
+        private const float CenterLineWidth = 1f;
+        private const float CenterLineOverhang = 2f;
+        private const int PanelHorizontalPadding = 12;
+        private const int PanelVerticalPadding = 10;
         private static readonly Color PanelColor = new Color(0.06f, 0.07f, 0.09f, 0.82f);
         private static readonly Color BarBackground = new Color(1f, 1f, 1f, 0.12f);
 
@@ -62,14 +68,15 @@ namespace AutoDc.UI
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label(caption, Label, GUILayout.Width(CaptionWidth));
-            Rect area = GUILayoutUtility.GetRect(10f, BarHeight, GUILayout.ExpandWidth(true));
-            area.y += (Label.lineHeight - BarHeight) * 0.5f + 2f;
+            Rect area = GUILayoutUtility.GetRect(MinBarWidth, BarHeight, GUILayout.ExpandWidth(true));
+            area.y += (Label.lineHeight - BarHeight) * 0.5f + BarVerticalOffset;
             area.height = BarHeight;
             FillRect(area, BarBackground);
             float center = area.x + area.width * 0.5f;
             float extent = Mathf.Clamp(value, -1f, 1f) * area.width * 0.5f;
             FillRect(new Rect(Mathf.Min(center, center + extent), area.y, Mathf.Abs(extent), area.height), color);
-            FillRect(new Rect(center - 0.5f, area.y - 2f, 1f, area.height + 4f), Muted);
+            FillRect(new Rect(center - CenterLineWidth * 0.5f, area.y - CenterLineOverhang, CenterLineWidth,
+                area.height + 2f * CenterLineOverhang), Muted);
             GUILayout.Label(valueText, Label, GUILayout.Width(ValueWidth));
             GUILayout.EndHorizontal();
         }
@@ -93,7 +100,7 @@ namespace AutoDc.UI
             background.Apply();
             _panel = new GUIStyle(GUI.skin.box)
             {
-                padding = new RectOffset(12, 12, 10, 10),
+                padding = new RectOffset(PanelHorizontalPadding, PanelHorizontalPadding, PanelVerticalPadding, PanelVerticalPadding),
                 alignment = TextAnchor.UpperLeft,
             };
             _panel.normal.background = background;
