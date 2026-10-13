@@ -32,19 +32,22 @@ Tools/fake_car.py           carro simulado para probar Unity sin hardware
 
 | Elemento | Conexión |
 |---|---|
-| Baterías 2 × 3,7 V (7,4 V) | `+12V` y `GND` del L298N |
+| Par 1: 2 × 3,7 V (7,4 V) | `+12V` y `GND` del L298N, y entrada del L7805CV n.º 1 |
+| Par 2: 2 × 3,7 V (7,4 V) | Entrada del L7805CV n.º 2 |
+| Salida del L7805CV n.º 1 (5 V) | ESP32 `VIN` y HC-SR04 `VCC` |
+| Salida del L7805CV n.º 2 (5 V) | Servo, cable rojo |
 | L298N `ENA` / `IN1` / `IN2` (motor izquierdo) | GPIO 25 / 26 / 27 |
 | L298N `ENB` / `IN3` / `IN4` (motor derecho) | GPIO 14 / 33 / 32 |
 | Servo: señal (naranja o amarillo) | GPIO 13 |
-| Servo: rojo / café o negro | `+5V` / `GND` del L298N |
-| HC-SR04 `VCC` / `GND` | `+5V` / `GND` del L298N |
 | HC-SR04 `TRIG` | GPIO 18 |
 | HC-SR04 `ECHO` | Divisor de tensión (1 kΩ en serie y 2 kΩ a `GND`) → GPIO 34 |
-| ESP32 `GND` | `GND` del L298N (tierra común) |
+| Tierra común | `−` de los dos pares, `GND` de los dos L7805CV, del L298N, del ESP32 y del HC-SR04, y cable café o negro del servo |
 
 - Hay que **quitar los jumpers de ENA y ENB** del L298N para que el ESP32 controle la velocidad por PWM.
-- El servo se alimenta del regulador de 5 V del L298N, **no** del pin de 3,3 V del ESP32. La señal de 3,3 V del ESP32 suele bastar para servos de 5 V.
-- Si el ESP32 se reinicia cuando arrancan los motores o se mueve el servo (caída de voltaje), el panel de Unity lo muestra: "Carro encendido hace N s" vuelve a 0. Un condensador de 470–1000 µF entre `+5V` y `GND` cerca del servo ayuda.
+- Patas del L7805CV, de frente y con las patas hacia abajo: 1 = entrada, 2 = `GND`, 3 = salida de 5 V. El servo va a la **salida**, nunca a la entrada de 7,4 V. Cada regulador lleva 0,33 µF entre entrada y `GND`, y 0,1 µF entre salida y `GND`.
+- El servo tiene su propio par para que sus picos de corriente no reinicien al ESP32. La señal de 3,3 V del ESP32 suele bastar para servos de 5 V.
+- El borne `+5V` del L298N queda sin usar.
+- Si el ESP32 se reinicia cuando arrancan los motores o se mueve el servo (caída de voltaje), el panel de Unity lo muestra: "Carro encendido hace N s" vuelve a 0. Un condensador de 100–470 µF entre la salida y `GND` del L7805CV del servo ayuda.
 - **El eco del HC-SR04 sale a 5 V y los GPIO del ESP32 solo toleran 3,3 V.** Sin el divisor se puede dañar el pin. Con 1 kΩ entre `ECHO` y el GPIO, y 2 kΩ entre el GPIO y `GND`, el GPIO ve 3,3 V. El GPIO 34 es solo de entrada, ideal para el eco. La señal `TRIG` de 3,3 V basta para disparar el sensor.
 - Los pines se cambian en `DriveConfig.h`. Se evitan los *strapping pins* del ESP32 (0, 2, 5, 12, 15).
 
